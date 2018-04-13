@@ -23,6 +23,7 @@ output:
 # Load and prepare the data.
 
 ```r
+setwd("/Users/nicholashedger/Google\ Drive/haffeybits")
 load('Wspacenew.RData')
 head(BIGDATA_CLEAN)
 ```
@@ -781,154 +782,358 @@ ggplot(mod3[mod3$sc2=="Intact",],aes(x=TimeBin,y=Prop))+facet_wrap(~ps,nrow=8)+g
 
 ***
 
+<a id='crossval'></a>
+## Cross-validation
 
-# Tested models
-
-1) Null
-2) AOI
-3) EQ * AOI
-4) EQ * AOI * lin
-5) EQ * AOI * quad
-6) EQ * AOI * lin + quad
-7) EQ * AOI * cub
-8) EQ * AOI * lin + cub
-9) EQ * AOI * quad + cub
-10) EQ * AOI * lin + quad + cub 
+We will test 19 models. First of all fit them to the full data.
 
 
 ```r
-# m1=lmer(Prop ~ 1 + (1 | ps),data = EQFRAME, REML = FALSE)
-# m2=lmer(Prop ~ AOI + (1 | ps),data = EQFRAME, REML = FALSE)
-# m3=lmer(Prop ~ EQ*AOI + (1 | ps),data = EQFRAME, REML = FALSE)
-# m4=lmer(Prop ~ EQ * AOI * (ot1) + (1 + ot1  | ps),data = EQFRAME, REML = FALSE)
-# m5=lmer(Prop ~ EQ * AOI * (ot2) + (1 + ot2 | ps),data = EQFRAME, REML = FALSE)
-# m6=lmer(Prop ~ EQ * AOI * (ot1 + ot2) + (1 + ot1 + ot2 | ps),data = EQFRAME, REML = FALSE)
-# m7=lmer(Prop ~ EQ * AOI * (ot3) + (1 + ot3 | ps),data = EQFRAME, REML = FALSE)
-# m8=lmer(Prop ~ EQ * AOI * (ot1 + ot3) + (1 + ot1 + ot3 | ps),data = EQFRAME, REML = FALSE)
-# m9=lmer(Prop ~ EQ * AOI * (ot2 + ot3) + (1 + ot2 + ot3 | ps),data = EQFRAME, REML = FALSE)
-# m10=lmer(Prop ~ EQ * AOI * (ot1 + ot2 + ot3) + (1 + ot1 + ot2 + ot3 | ps),data = EQFRAME, REML = FALSE)
-# 
-# 
-# 
-# x=new.env()
-# createLOOstruct=function(frame){
-#   
-#   mnames=c("Null","AOI","EQAOI","EQAOIlin","EQAOIquad","EQAOIlinquad","EQAOIcub","EQAOIlincub","EQAOIquadcub","EQAOIlinquadcub")
-#   mcalls=c(m1@call$formula,m2@call$formula,m3@call$formula,m4@call$formula,m5@call$formula,m6@call$formula,m7@call$formula,m8@call$formula,m9@call$formula,m10@call$formula)
-# 
-#   psvec=as.numeric(levels(frame$ps))
-#   
-#   # Define names to assign to in the new environment.
-#   envsin=strcat("In",as.character(levels(frame$ps)),"env")
-#   envsout=strcat("Out",as.character(levels(frame$ps)),"env")
-#   actual=strcat("Actual",as.character(levels(frame$ps)),"env")
-#   
-#    for (i in 1:length(mnames)){
-#     assign(strcat("fit",mnames[i]),strcat(mnames[i],as.character(levels(frame$ps))),envir=x)
-#     assign(strcat("predfit",mnames[i]),strcat(mnames[i],as.character(levels(frame$ps))),envir=x)
-#     assign(strcat("error",mnames[i]),strcat(mnames[i],as.character(levels(frame$ps))),envir=x)
-# }
-# 
-#   
-#   # For each participant
-#   for (i in 1:length(psvec)){
-#     # Create a frame that includes everyone but the one subject ('kept in' frame).
-#     assign(envsin[i],frame[frame$ps!=psvec[i],],envir=x)
-#     # Create a frame that includes just the one subject ('left out' frame)
-#     assign(envsout[i],frame[frame$ps==psvec[i] & !is.na(frame$Prop),],envir=x)
-#     
-#   }
-#   return(x)
-# }
-#   
-# 
-# LOOSTRUCT=createLOOstruct(EQFRAME)
-# 
-# 
-# envsin=strcat("In",as.character(levels(frame$ps)),"env")
-# envsout=strcat("Out",as.character(levels(frame$ps)),"env")
-# actual=strcat("Actual",as.character(levels(frame$ps)),"env")
-# assign(strcat("predfit",mnames[i]),strcat(mnames[i],as.character(levels(frame$ps))))
-# 
-# 
-# 
-# psvec=as.numeric(levels(frame$ps))
-#   for (i in 1:length(psvec)){
-#      assign(actual[i],get(envsout[i],envir=x)$Prop, envir = x)
-#     for (m in 1:length(mnames)){
-#       print(c(i,m))
-#       assign(strcat("fit",mnames[m],as.character(psvec[i])),lmer(formula=mcalls[[m]],data = get(envsin[i],envir=x), REML = FALSE), envir = x)
-#     }
-#   }
-# 
-# 
-# 
-#   #for (i in 1:length(psvec)){
-#     #for (m in 1:length(mnames)){
-#   
-# 
-# for (i in 1:15){
-#     for (m in 1:length(mnames)){
-# 
-#       #print(c(i,m))
-#       temp_model=get(strcat("fit",mnames[m],as.character(psvec[i])),envir=x)
-#       print(temp_model)
-#       temp_env=get(envsout[i],envir=x)
-#       temp_actual=get(actual[i],envir=x)
-#       assign(strcat("predfit",mnames[m],as.character(psvec[i])),predict(temp_model,temp_env,allow.new.levels=TRUE),envir=x)
-#         }
-#   }
-# 
-# 
-# for (i in 1:15){
-#     for (m in 1:length(mnames)){
-# 
-#       assign(strcat("plot",mnames[m],as.character(psvec[i])),qplot(get(strcat("predfit",mnames[m],as.character(psvec[i])),envir=x),get(actual[i],envir=x)),envir=x)
-#     }
-# }
-# 
-# 
-# 
-# 
-#       
-#       
-#     
-#     # Get the actual values for the left-out subject.
-#     
-#     
-#     # Original model
-#     # Using the model fits, get the predictions for the 'left out' data and compute the sum of squares.
-#     assign(predfit1[i],predict(get(fit1[i],envir = x),get(envsout[i],envir=x),allow.new.levels = TRUE), envir = x)
-#     assign(error[i],sum((get(actual[i],envir=x) - get(predfit1[i],envir=x)) ^2), envir = x)
-#     
-#     
-#     # +EQ model
-#     assign(predfitEQ[i],predict(get(fitEQ[i],envir = x),get(envsout[i],envir=x),allow.new.levels = TRUE), envir = x)
-#     assign(errorEQ[i],sum((get(actual[i],envir=x) - get(predfitEQ[i],envir=x)) ^2), envir = x)
-#     
-#     # +EQ + GE model
-#     assign(predfitEQGE[i],predict(get(fitEQGE[i],envir = x),get(envsout[i],envir=x),allow.new.levels = TRUE), envir = x)
-#     assign(errorEQGE[i],sum((get(actual[i],envir=x) - get(predfitEQGE[i],envir=x)) ^2), envir = x)
-#     
-#     # Just GE model
-#     assign(predfitGE[i],predict(get(fitGE[i],envir = x),get(envsout[i],envir=x),allow.new.levels = TRUE), envir = x)
-#     assign(errorGE[i],sum((get(actual[i],envir=x) - get(predfitGE[i],envir=x)) ^2), envir = x)
-#     
-#     # Just AOI model
-#     assign(predfitAOI[i],predict(get(fitAOI[i],envir = x),get(envsout[i],envir=x),allow.new.levels = TRUE), envir = x)
-#     assign(errorAOI[i],sum((get(actual[i],envir=x) - get(predfitAOI[i],envir=x)) ^2), envir = x)
-#     
-#     # Just AOI and linear
-#     assign(predfitAOIlin[i],predict(get(fitAOIlin[i],envir = x),get(envsout[i],envir=x),allow.new.levels = TRUE), envir = x)
-#     assign(errorAOIlin[i],sum((get(actual[i],envir=x) - get(predfitAOIlin[i],envir=x)) ^2), envir = x)
-#     
-#   }
-#   return(x)
-# }
-# 
-# LOOSTRUCT=createLOOstruct(EQFRAME)
+# Just a random variable
+psvec=as.numeric(levels(EQFRAME$ps))
+EQFRAME$randvar=rep(0,nrow(EQFRAME))
+levels(EQFRAME$ps)
 ```
 
+```
+##  [1] "106" "105" "104" "103" "102" "101" "100" "99"  "98"  "97"  "96" 
+## [12] "95"  "94"  "93"  "92"  "91"  "90"  "89"  "88"  "87"  "86"  "85" 
+## [23] "84"  "83"  "82"  "81"  "80"  "79"  "78"  "76"  "75"  "74"  "73" 
+## [34] "72"  "71"  "70"  "69"  "68"  "65"  "64"  "63"  "62"  "61"  "60" 
+## [45] "59"  "57"  "56"  "55"  "54"  "53"  "52"  "51"  "49"  "48"  "47" 
+## [56] "46"  "45"  "44"  "43"  "42"  "41"  "40"  "39"  "38"  "37"  "36" 
+## [67] "35"  "34"  "33"  "32"  "31"  "30"  "29"  "28"  "26"  "25"  "24" 
+## [78] "23"  "22"  "21"  "20"  "19"  "18"  "17"  "16"  "15"  "14"  "13" 
+## [89] "11"  "10"  "9"   "8"   "7"   "6"   "5"   "4"   "3"   "2"   "1"
+```
+
+```r
+for (i in 1:length(psvec)){
+  if (nrow(EQFRAME[EQFRAME$ps==psvec[i],])>0){
+
+  EQFRAME[EQFRAME$ps==psvec[i],]$randvar=rep(sample(1:100,1))
+  }
+}
+
+  
+  
+# Null model
+m1=lmer(Prop ~ 1 + (1 | ps),data = EQFRAME, REML = FALSE)
+# AOI only
+m2=lmer(Prop ~ AOI * (1 | ps) + (1 | ps),data = EQFRAME, REML = FALSE)
+# Aoi and linear 
+m3=lmer(Prop ~ AOI * (ot1) + (1 + ot1  | ps) + (1 | ps),data = EQFRAME, REML = FALSE)
+# etc
+m4=lmer(Prop ~ AOI * (ot2) + (1 + ot2 | ps),data = EQFRAME, REML = FALSE)
+m5=lmer(Prop ~ AOI * (ot1 + ot2) + (1 + ot1 + ot2 | ps),data = EQFRAME, REML = FALSE)
+m6=lmer(Prop ~ AOI * (ot3) + (1 + ot3 | ps),data = EQFRAME, REML = FALSE)
+m7=lmer(Prop ~ AOI * (ot1 + ot3) + (1 + ot1 + ot3 | ps),data = EQFRAME, REML = FALSE)
+m8=lmer(Prop ~ AOI * (ot2 + ot3) + (1 + ot2 + ot3 | ps),data = EQFRAME, REML = FALSE)
+m9=lmer(Prop ~ AOI * (ot1 + ot2 + ot3) + (1 + ot1 + ot2 + ot3 | ps),data = EQFRAME, REML = FALSE)
+m10=lmer(Prop ~ EQ*AOI + (1 | ps),data = EQFRAME, REML = FALSE)
+m11=lmer(Prop ~ EQ * AOI * (ot1) + (1 + ot1  | ps),data = EQFRAME, REML = FALSE)
+m12=lmer(Prop ~ EQ * AOI * (ot2) + (1 + ot2 | ps),data = EQFRAME, REML = FALSE)
+m13=lmer(Prop ~ EQ * AOI * (ot1 + ot2) + (1 + ot1 + ot2 | ps),data = EQFRAME, REML = FALSE)
+m14=lmer(Prop ~ EQ * AOI * (ot3) + (1 + ot3 | ps),data = EQFRAME, REML = FALSE)
+m15=lmer(Prop ~ EQ * AOI * (ot1 + ot3) + (1 + ot1 + ot3 | ps),data = EQFRAME, REML = FALSE)
+m16=lmer(Prop ~ EQ * AOI * (ot2 + ot3) + (1 + ot2 + ot3 | ps),data = EQFRAME, REML = FALSE)
+m17=lmer(Prop ~ EQ * AOI * (ot1 + ot2 + ot3) + (1 + ot1 + ot2 + ot3 | ps),data = EQFRAME, REML = FALSE)
+m18=lmer(Prop ~ randvar * AOI * (ot1 + ot2 + ot3) + (1 + ot1 + ot2 + ot3 | ps),data = EQFRAME, REML = FALSE)
+m19=lmer(Prop ~ randvar * AOI  + (1 | ps),data = EQFRAME, REML = FALSE)
+```
+
+Now define a function for creating the structures for LOO analysis.
+
+
+```r
+x=new.env()
+createLOOstruct=function(frame){
+
+  # Names of the models.
+  mnames=c("Null","AOI","AOIlin","AOIquad","AOIlinquad","AOIcub","AOIlincub","AOIquadcub","AOIlinquadcub","EQAOI","EQAOIlin","EQAOIquad","EQAOIlinquad","EQAOIcub","EQAOIlincub","EQAOIquadcub","EQAOIlinquadcub","randomcomplex","randomAOI")
+  
+  # Calls for the models.
+  mcalls=c(m1@call$formula,m2@call$formula,m3@call$formula,m4@call$formula,m5@call$formula,m6@call$formula,m7@call$formula,m8@call$formula,m9@call$formula,m10@call$formula,m11@call$formula,m12@call$formula,m13@call$formula,m14@call$formula,m15@call$formula,m16@call$formula,m17@call$formula,m18@call$formula,m19@call$formula)
+  
+  # Vector for participants
+  psvec=as.numeric(levels(frame$ps))
+
+  # Define names to assign to in the new environment.
+  
+  # The 'kept in' dataframe
+  
+  envsin=strcat("In",as.character(levels(frame$ps)),"env")
+  
+  # The 'left out' dataframe
+  envsout=strcat("Out",as.character(levels(frame$ps)),"env")
+  
+  # The actual data (to be compared to the model predictions).
+  
+  actual=strcat("Actual",as.character(levels(frame$ps)),"env")
+
+
+  # For each participant
+  for (i in 1:length(psvec)){
+    # Create a frame that includes everyone but the one subject ('kept in' frame).
+    assign(envsin[i],frame[frame$ps!=psvec[i],],envir=x)
+    # Create a frame that includes just the one subject ('left out' frame)
+    assign(envsout[i],frame[frame$ps==psvec[i] & !is.na(frame$Prop),],envir=x)
+
+  }
+  return(x)
+}
+
+
+LOOSTRUCT=createLOOstruct(EQFRAME)
+```
+
+For instance, this contains all observers apart from 1 'kept in'
+
+
+```r
+table(x$Inenv1$ps)
+```
+
+```
+## 
+## 106 105 104 103 102 101 100  99  98  97  96  95  94  93  92  91  90  89 
+##  62  62  62  62  62  62  62  62  62  62  62  62  62  62  62  62  62  62 
+##  88  87  86  85  84  83  82  81  80  79  78  76  75  74  73  72  71  70 
+##  62  62  62  62  62  62  62  62  62  62  62  62  62  62  62  62  62  62 
+##  69  68  65  64  63  62  61  60  59  57  56  55  54  53  52  51  49  48 
+##  62  62  62  62  62  62  62  62  62  62  62  62  62  62  62  62  62  62 
+##  47  46  45  44  43  42  41  40  39  38  37  36  35  34  33  32  31  30 
+##  62  62  62  62  62  62  62  62  62  62  62  62  62   0  62  62  62  62 
+##  29  28  26  25  24  23  22  21  20  19  18  17  16  15  14  13  11  10 
+##  62  62  62  62  62  62  62  62  62  62  62  62  62  62  62  62  62  62 
+##   9   8   7   6   5   4   3   2   1 
+##  62  62  62  62  62  62  62  62   0
+```
+
+and this contains all observers apart from 1 'left out'
+
+
+```r
+table(x$Outenv1$ps)
+```
+
+```
+## 
+## 106 105 104 103 102 101 100  99  98  97  96  95  94  93  92  91  90  89 
+##   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0 
+##  88  87  86  85  84  83  82  81  80  79  78  76  75  74  73  72  71  70 
+##   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0 
+##  69  68  65  64  63  62  61  60  59  57  56  55  54  53  52  51  49  48 
+##   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0 
+##  47  46  45  44  43  42  41  40  39  38  37  36  35  34  33  32  31  30 
+##   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0 
+##  29  28  26  25  24  23  22  21  20  19  18  17  16  15  14  13  11  10 
+##   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0 
+##   9   8   7   6   5   4   3   2   1 
+##   0   0   0   0   0   0   0   0  62
+```
+
+
+```r
+envsin=strcat("In",as.character(levels(EQFRAME$ps)),"env")
+envsout=strcat("Out",as.character(levels(EQFRAME$ps)),"env")
+actual=strcat("Actual",as.character(levels(EQFRAME$ps)),"env")
+
+
+  mnames=c("Null","AOI","AOIlin","AOIquad","AOIlinquad","AOIcub","AOIlincub","AOIquadcub","AOIlinquadcub","EQAOI","EQAOIlin","EQAOIquad","EQAOIlinquad","EQAOIcub","EQAOIlincub","EQAOIquadcub","EQAOIlinquadcub","randomcomplex","randomAOI")
+  # Calls for the models.
+  mcalls=c(m1@call$formula,m2@call$formula,m3@call$formula,m4@call$formula,m5@call$formula,m6@call$formula,m7@call$formula,m8@call$formula,m9@call$formula,m10@call$formula,m11@call$formula,m12@call$formula,m13@call$formula,m14@call$formula,m15@call$formula,m16@call$formula,m17@call$formula,m18@call$formula,m19@call$formula)
+
+
+# Go through each participant and each model
+psvec=as.numeric(levels(EQFRAME$ps))
+  for (i in 1:length(psvec)){
+    # Create variable that represents the left out data for each participant.
+     assign(actual[i],get(envsout[i],envir=x)$Prop, envir = x)
+    for (m in 1:length(mnames)){
+    #  print(c(i,m))
+      # Fit the model to the 'kept in' data.
+      assign(strcat("fit",mnames[m],as.character(psvec[i])),lmer(formula=mcalls[[m]],data = get(envsin[i],envir=x), REML = TRUE), envir = x)
+    }
+  }
+```
+
+```
+## Warning in optwrap(optimizer, devfun, getStart(start, rho$lower, rho$pp), :
+## convergence code 3 from bobyqa: bobyqa -- a trust region step failed to
+## reduce q
+
+## Warning in optwrap(optimizer, devfun, getStart(start, rho$lower, rho$pp), :
+## convergence code 3 from bobyqa: bobyqa -- a trust region step failed to
+## reduce q
+
+## Warning in optwrap(optimizer, devfun, getStart(start, rho$lower, rho$pp), :
+## convergence code 3 from bobyqa: bobyqa -- a trust region step failed to
+## reduce q
+
+## Warning in optwrap(optimizer, devfun, getStart(start, rho$lower, rho$pp), :
+## convergence code 3 from bobyqa: bobyqa -- a trust region step failed to
+## reduce q
+
+## Warning in optwrap(optimizer, devfun, getStart(start, rho$lower, rho$pp), :
+## convergence code 3 from bobyqa: bobyqa -- a trust region step failed to
+## reduce q
+
+## Warning in optwrap(optimizer, devfun, getStart(start, rho$lower, rho$pp), :
+## convergence code 3 from bobyqa: bobyqa -- a trust region step failed to
+## reduce q
+
+## Warning in optwrap(optimizer, devfun, getStart(start, rho$lower, rho$pp), :
+## convergence code 3 from bobyqa: bobyqa -- a trust region step failed to
+## reduce q
+
+## Warning in optwrap(optimizer, devfun, getStart(start, rho$lower, rho$pp), :
+## convergence code 3 from bobyqa: bobyqa -- a trust region step failed to
+## reduce q
+```
+Now we have 99*17 models.
+
+For instance
+
+
+```r
+x$fit101EQAOIlinquad
+```
+
+```
+## Linear mixed model fit by REML ['merModLmerTest']
+## Formula: Prop ~ EQ * AOI * (ot1 + ot2) + (1 + ot1 + ot2 | ps)
+##    Data: get(envsin[i], envir = x)
+## REML criterion at convergence: -6430.007
+## Random effects:
+##  Groups   Name        Std.Dev.  Corr       
+##  ps       (Intercept) 0.000e+00            
+##           ot1         3.970e-08   NaN      
+##           ot2         6.500e-08   NaN -0.33
+##  Residual             1.392e-01            
+## Number of obs: 5918, groups:  ps, 97
+## Fixed Effects:
+##      (Intercept)                EQ         AOISOCIAL               ot1  
+##         0.574520         -0.003059         -0.149040         -0.170298  
+##              ot2      EQ:AOISOCIAL            EQ:ot1            EQ:ot2  
+##         0.148789          0.006119          0.005736         -0.004837  
+##    AOISOCIAL:ot1     AOISOCIAL:ot2  EQ:AOISOCIAL:ot1  EQ:AOISOCIAL:ot2  
+##         0.340596         -0.297578         -0.011472          0.009675
+```
+
+Is the model including AOI, EQ, linear and quadratic, fit to the data with observer 101 left out. 
+
+
+Now we have the models and the actual values. We need to use the model fit to the 'kept in' observers to see how well it predicts the data fit to the 'left out' observer.
+
+
+```r
+for (i in 1:length(psvec)){
+    for (m in 1:length(mnames)){
+      if (psvec[i]!=34){
+    #  print(c(i,m))
+      # Get the model that was fit to the kept in data
+      temp_model=get(strcat("fit",mnames[m],as.character(psvec[i])),envir=x)
+      # Get the left out data
+      temp_env=get(envsout[i],envir=x)
+      # Get the actual values for the left out data
+      temp_actual=get(actual[i],envir=x)
+      # Use the model fit to the kept in data and use it to predict the left out data
+      assign(strcat("predfit",mnames[m],as.character(psvec[i])),predict(temp_model,temp_env,allow.new.levels=TRUE),envir=x)
+      temp_predfit=get(strcat("predfit",mnames[m],as.character(psvec[i])),envir=x)
+      # Calculate some residuals
+      assign(strcat("residual",mnames[m],as.character(psvec[i])),sum((get(actual[i],envir=x) - temp_predfit) ^2),envir=x)}
+      
+        }
+}
+```
+
+Now put all the residuals into a big matrix and plot everything. 
+
+
+```r
+psvec2=psvec[psvec!=34]
+
+
+mat=matrix(nrow=length(psvec2),ncol=length(mnames))
+
+for (i in 1:length(psvec2)){
+  for (m in 1:length(mnames)){
+  mat[i,m]=get(strcat("residual",mnames[m],as.character(psvec2[i])),envir=x)
+
+  }
+}
+
+
+matframe=data.frame(mat)
+colnames(matframe)=mnames
+
+library(reshape2)
+
+meltframe=melt(matframe)
+```
+
+```
+## No id variables; using all as measure variables
+```
+
+```r
+ggplot(meltframe,(aes(x=variable,y=value)))+geom_point(position=position_jitter(w=0.2),colour="springgreen3",alpha=.6)+stat_summary(fun.y = mean, geom="point",colour="steelblue2",size=5)
+```
+
+![](3_sec_files/figure-html/unnamed-chunk-29-1.png)<!-- -->
+
+
+Now lets plot the best fit we could get with the best model
+
+
+```r
+showobs=function(subj){
+  idx=which(psvec==subj)
+pnames=strcat("Plot",mnames)
+penv=new.env()
+for (i in 1:length(mnames)){
+d=get(envsout[idx],envir=x)
+dpred=get(strcat("predfit",mnames[i],as.character(psvec[idx])),envir=x)
+dfull=cbind(d,dpred)
+colnames(dfull)=c(colnames(d),"pred")
+
+assign(pnames[i],ggplot(dfull,aes(x=TimeBin,y=Prop))+geom_point(aes(colour=AOI),size=2,shape=6)+ scale_colour_manual(values = c("springgreen3","steelblue2","springgreen3","steelblue2"))+geom_line(aes(x=TimeBin,y=pred,colour=AOI),size=2,linetype="solid")+scale_y_continuous(limits=c(0,1),breaks=seq(0,1,0.2))+ theme(legend.position="top"),envir=penv)
+}
+return(penv)
+}
+
+
+mystruct=showobs(psvec[which.min(matframe$EQAOIquadcub)])
+
+
+multiplot(mystruct$PlotNull,mystruct$PlotAOI,mystruct$PlotEQAOI,mystruct$PlotEQAOIquadcub,cols=4)
+```
+
+![](3_sec_files/figure-html/unnamed-chunk-30-1.png)<!-- -->
+
+Now lets plot the best model predictions. Do it for a subset of observers only to avoid a big plot. Get a representative range of fits.
+
+
+
+```r
+mod_final=cbind(EQFRAME[EQFRAME$sc2=="Intact" & !is.na(EQFRAME$Prop),],predict(m17))
+
+colnames(mod_final)=c(colnames(EQFRAME),"pred")
+
+
+
+best_indices=order(matframe$EQAOIlinquadcub)
+
+subj=psvec[best_indices[round(linspace(1,length(best_indices),20))]]
+
+show_ps=which(psvec %in% subj)
+
+
+ggplot(mod_final[mod_final$sc2=="Intact" & mod_final$ps %in% show_ps,],aes(x=TimeBin,y=Prop))+facet_wrap(~ps,nrow=4)+geom_line(aes(x=TimeBin,y=pred,colour=AOI),size=2,linetype="solid")+geom_point(aes(colour=AOI),size=0.5,shape=6)+ scale_colour_manual(values = c("springgreen3","steelblue2","springgreen3","steelblue2"))
+```
+
+![](3_sec_files/figure-html/unnamed-chunk-31-1.png)<!-- -->
 
 
 
