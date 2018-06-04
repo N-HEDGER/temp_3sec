@@ -46,7 +46,7 @@ head(BIGDATA_CLEAN)
 ## 16       -   -    106  TRUE       0  FALSE     FALSE    24  102
 ```
 
-Here I assign the a variable for whether the image is inact or scrambled and also add the subject EQ/AQ data.
+Here I assign a variable for whether the image is inact or scrambled and also add the subject EQ/AQ data.
 
 
 ```r
@@ -100,17 +100,7 @@ Here I collapse time across the entire trial length and return a dataframe for p
 ```r
 library(ggplot2)
 response_window_agg_by_sub <- make_time_window_data(data, aois=c("SOCIAL","NONSOCIAL"),summarize_by = "ps",predictor_columns = c("sc2","EQ"))
-```
 
-```
-## Analyzing SOCIAL...
-```
-
-```
-## Analyzing NONSOCIAL...
-```
-
-```r
 P1=ggplot(response_window_agg_by_sub,aes(x=AOI,y=Prop))+facet_grid(.~sc2)+  stat_summary(fun.y=mean,position=position_dodge(width=0.95),geom="bar",aes(fill=AOI),size=2,alpha=.5,colour="black")+theme_bw(base_size = 11)+ylab("Gaze Proportion")+geom_point(colour="red",position = position_jitter(w=0.2),alpha=.5,size=1)+
   theme(panel.grid.minor = element_blank(),panel.grid.major = element_blank(),panel.background = element_blank(), axis.line = element_line(colour = "black"))+ theme(strip.background = element_rect(fill="gray90"))+scale_colour_discrete(guide=FALSE)+ theme(axis.text.x = element_text(angle = 25, hjust = 1))+ scale_fill_manual(values = c("springgreen3","steelblue2"))+theme(legend.position = "none")+ggtitle("a)")
 P1
@@ -126,13 +116,6 @@ Now I fit a model to the window data. Perform tests of model coefficients via li
 library(lme4)
 library(afex)
 library(phia)
-```
-
-```
-## Warning: package 'car' was built under R version 3.4.3
-```
-
-```r
 library(nlme)
 library(effects)
 
@@ -195,102 +178,8 @@ model_windowEQp <- mixed(Prop ~ AOI*sc2*EQ+(1|ps), response_window_agg_by_sub,me
 ```
 
 ```
-## Warning in mixed(Prop ~ AOI * sc2 * EQ + (1 | ps),
-## response_window_agg_by_sub, : Due to missing values, reduced number of
-## observations to 392
-```
-
-```
-## Warning in mixed(Prop ~ AOI * sc2 * EQ + (1 | ps),
-## response_window_agg_by_sub, : Due to missing values, set_data_arg set to
-## FALSE.
-```
-
-```
 ## Fitting 8 (g)lmer() models:
-## [
-```
-
-```
-## Warning: contrasts dropped from factor ps due to missing levels
-```
-
-```
-## Warning: contrasts dropped from factor ps due to missing levels
-```
-
-```
-## .
-```
-
-```
-## Warning: contrasts dropped from factor ps due to missing levels
-
-## Warning: contrasts dropped from factor ps due to missing levels
-```
-
-```
-## .
-```
-
-```
-## Warning: contrasts dropped from factor ps due to missing levels
-
-## Warning: contrasts dropped from factor ps due to missing levels
-```
-
-```
-## .
-```
-
-```
-## Warning: contrasts dropped from factor ps due to missing levels
-
-## Warning: contrasts dropped from factor ps due to missing levels
-```
-
-```
-## .
-```
-
-```
-## Warning: contrasts dropped from factor ps due to missing levels
-
-## Warning: contrasts dropped from factor ps due to missing levels
-```
-
-```
-## .
-```
-
-```
-## Warning: contrasts dropped from factor ps due to missing levels
-
-## Warning: contrasts dropped from factor ps due to missing levels
-```
-
-```
-## .
-```
-
-```
-## Warning: contrasts dropped from factor ps due to missing levels
-
-## Warning: contrasts dropped from factor ps due to missing levels
-```
-
-```
-## .
-```
-
-```
-## Warning: contrasts dropped from factor ps due to missing levels
-
-## Warning: contrasts dropped from factor ps due to missing levels
-```
-
-```
-## .]
+## [........]
 ```
 
 ```r
@@ -423,11 +312,11 @@ multiplot(P1,P2,P3,layout=matrix(c(1,1,1,3,3,3,0,2,2,2,2,0), nrow=2, byrow=TRUE)
 
 ## Growth Curve analysis_model
 
-Since we are dealing with mutliple interactions with multiple higher-order polynomials, I think it is justified to fit a model independently to scrambled and intact stimuli, to help with interpretation.
+Time to do some forward selection. We are interested in the intact condition only. 
 
 ### Intact
 
-Model 1- Start a model with the intercept only. This means that there is no bias towards either AOI. Plot the predictions to help interpretation.
+Model 1- Start a model with the intercept only. This means that there is no bias towards either AOI (since the mean of dependent proportions is going to be 0.5). Plot the predictions to help interpretation.
 
 
 ```r
@@ -439,7 +328,7 @@ plot(response_time[response_time$sc2=="Intact",], predictor_column = c("AOI"), d
 ![](3_sec_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
 
 
-Model 2 - Now add AOI as a fixed effect. This allows for a vertical offset in gaze proportion dependent on the AOI, but one that is time invariant (a straight line). Plot the predictions
+Model 2 - Now add AOI as a fixed effect. This allows for a vertical offset in gaze proportion dependent on the AOI, but one that is time invariant (a straight line). Plot the predictions.
 
 
 ```r
@@ -506,7 +395,7 @@ LINTIME
 
 ![](3_sec_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
 
-We continue.
+This is better than a time-invariant model, but it still doesn't fit the profile of the bias very well. We continue.
 
 Model 4 - Include linear and quadratic term.
 
@@ -572,9 +461,9 @@ Here is a good place to stop for now. The addition of a cubic term doesnt seem t
 <a id='LOO1'></a>
 ## Leave one out analysis 1
 
-Perform a leave one out analysis to test the generalisation performance of the models 
+Perform a leave one out analysis to test the generalisation performance of the models. We could rely on the AICs, but this test is more direct and robust. 
 
-First define the model objects.
+First define the model objects:
 
 
 ```r
@@ -645,7 +534,7 @@ createLOOstruct=function(frame){
 LOOSTRUCT=createLOOstruct(Intactframe)
 ```
 
-Fit the model to N-1 observers, test the fit to the left out observer.
+Fit the model to N-1 observers (training set), test the fit to the left out observer (test set).
 
 
 ```r
@@ -691,7 +580,7 @@ for (i in 1:length(psvec)){
 }
 ```
 
-Now do some plotting of the LOO performance.
+Now do some plotting of the LOO performance. Sum the residuals across the test sets.
 
 
 ```r
@@ -735,7 +624,7 @@ threshold_t = qt(p = 1 - .05/2, df = num_sub-1)
 response_time_new <- make_time_sequence_data(data, time_bin_size = 100,aois = c("SOCIAL"),predictor_columns = c("sc2","AQ","EQ"),summarize_by="ps")
 response_time_new=response_time_new[response_time_new$Time>=100,]
 
-# Define EQ as a predictor and dind adjacent bins that pass the t test-statistic threshold. 
+# Define EQ as a predictor and find adjacent bins that pass the t test-statistic threshold. 
 df_timeclust_between <- make_time_cluster_data(response_time_new[response_time_new$sc2=="Intact",], test= "lm",predictor_column = "EQ", threshold = threshold_t)
 
 # Plot the timebins that exceed the threshold.
@@ -743,7 +632,7 @@ Px=plot(df_timeclust_between)+ scale_fill_manual(values = c("springgreen3","stee
 theme(panel.grid.minor = element_blank(),panel.grid.major = element_blank(),panel.background = element_blank(), axis.line = element_line(colour = "black"))+ theme(strip.background = element_rect(fill="gray90"))+xlab("Time in Trial (ms)")
 
 
-# Perform the bootstrapped-cluster analysis.
+# Perform the bootstrapped-cluster analysis (described in the SI).
 clust_analysis_between <- analyze_time_clusters(df_timeclust_between, within_subj = FALSE, samples=1000)
 clust_analysis_between
 ```
@@ -775,7 +664,7 @@ multiplot(Px,Py)
 ```
 
 
-Now add EQ as a fixed effect in addition to the variables defined in our global model. Specify a model that allows EQ to interact with just AOI (reduced interactive) and also one that additionally allows it to interact with time (fully interactive).
+Now add EQ as a fixed effect in addition to the variables defined in our global model. Specify a model that allows EQ to interact with just AOI (reduced interactive) and also one that additionally allows it to interact with the time regressors (fully interactive).
 
 
 ```r
@@ -1006,10 +895,6 @@ slist2=match(subj2,unsort_list2)
 
 pslist2=unique(modEMP$ps)[slist2]
 
-fits1=ggplot(modEMP[modEMP$sc2=="Intact" & modEMP$ps %in% pslist2,],aes(x=TimeBin,y=Prop))+facet_wrap(~ps,nrow=1)+geom_line(aes(x=TimeBin,y=predEQ,colour=AOI),size=2,linetype="solid")+geom_point(aes(colour=AOI),size=0.5,shape=6)+ scale_colour_manual(values = c("springgreen3","steelblue2","springgreen3","steelblue2"))+ scale_fill_manual(values = c("springgreen3","steelblue2","springgreen3","steelblue2"))+theme_bw(base_size=11)+
-  theme(panel.grid.minor = element_blank(),panel.grid.major = element_blank(),panel.background = element_blank(), axis.line = element_line(colour = "black"))+ theme(strip.background = element_rect(fill="gray90"))+ theme(legend.position="top")+ylab("Gaze Proportion")
-
-
 
 modEMP2=modEMP[modEMP$ps %in% pslist2,]
 
@@ -1019,7 +904,31 @@ fits1=ggplot(modEMP2[modEMP2$sc2=="Intact",],aes(x=TimeBin,y=Prop))+facet_wrap(~
 
 
 
-multiplot(Px,fits1)
+modEMP2=cbind(EQFRAME[!is.na(EQFRAME$Prop),],predict(m2))
+
+colnames(modEMP2)=c(colnames(EQFRAME),"predEQ")
+
+modEMP2$ssrEQ=rep(0,nrow(modEMP2))
+
+
+for (p in 1:length(unique(modEMP2$ps))){
+    modEMP2[modEMP2$ps==unique(modEMP2$ps)[p],]$ssrEQ=rep(sum((modEMP2[modEMP2$ps==unique(modEMP2$ps)[p],]$predEQ-modEMP2[modEMP2$ps==unique(modEMP2$ps)[p],]$Prop)^2))
+    
+}
+
+
+modEMP2=modEMP2[modEMP2$ps %in% pslist2,]
+
+
+fits2=ggplot(modEMP2[modEMP2$sc2=="Intact",],aes(x=TimeBin,y=Prop))+facet_wrap(~EQ,nrow=1)+geom_line(aes(x=TimeBin,y=predEQ,colour=AOI),size=2,linetype="solid")+geom_point(aes(colour=AOI),size=0.5,shape=6)+ scale_colour_manual(values = c("springgreen3","steelblue2","springgreen3","steelblue2"))+ scale_fill_manual(values = c("springgreen3","steelblue2","springgreen3","steelblue2"))+theme_bw(base_size=11)+
+  theme(panel.grid.minor = element_blank(),panel.grid.major = element_blank(),panel.background = element_blank(), axis.line = element_line(colour = "black"))+ theme(strip.background = element_rect(fill="gray90"))+ theme(legend.position="top")+ylab("Gaze Proportion")
+
+
+
+
+
+
+multiplot(Px,fits2+ggtitle("Reduced interactive"),fits1+ggtitle("Fully interactive"))
 ```
 
 ![](3_sec_files/figure-html/unnamed-chunk-22-1.png)<!-- -->
